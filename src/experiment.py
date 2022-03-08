@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error
 import tensorflow as tf
 from keras.models import Sequential, load_model
-from keras.layers import Dense
+from keras.layers import Dense, LSTM
 from keras.callbacks import EarlyStopping
 
 from src import data_processor
@@ -18,25 +18,26 @@ class Experiment:
         self.neurons = neurons
         self.epochs = epochs
 
-    def create_model(self, neurons, window_size):    
+    def create_mlp_model(self, neurons, window_size):    
         model = Sequential()
         model.add(Dense(neurons, input_dim=window_size, activation='relu'))
         model.add(Dense(1, activation='linear'))
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(0.001))
         return model
 
+
     def check_model(self, fpath, neurons, window_size):
         # Check if model exists
-        if os.path.isfile(fpath + 'btc_checkpoint.h5'):
-            model = load_model(fpath + 'btc_checkpoint.h5')
+        if os.path.isfile(fpath + self.symbol + '_checkpoint.h5'):
+            model = load_model(fpath + self.symbol + '_checkpoint.h5')
         else:
-            model = self.create_model(neurons, window_size)
+            model = self.create_mlp_model(neurons, window_size)
         return model
 
     def run_experiment(self):
 
         for n in self.neurons:
-            for window_size in range(1, 365):
+            for window_size in range(1, 366):
                 # Initializing
                 i = 0
                 dataset = self.data[:window_size]
@@ -84,7 +85,7 @@ class Experiment:
                     compound_rmse.append(math.sqrt(mean_squared_error(dataset[window_size:], predictions)))
 
                 # Save NN model
-                model.save(fpath + 'btc_checkpoint.h5')
+                model.save(fpath + self.symbol + '_checkpoint.h5')
 
                 compare = data_processor.get_compare(self.data, dataset, predictions, singular_rmse, compound_rmse, window_size)
 

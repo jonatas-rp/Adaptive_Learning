@@ -3,10 +3,10 @@ from src import data_processor, experiment
 
 def main():
     epochs = 100
-    neurons = [16, 1024]
-    data = data_processor.get_data('Database/taee_db.csv')
+    neurons = [16, 64, 128, 1024]
+    data = data_processor.get_data('Database/bova_db.csv')
 
-    exp = experiment.Experiment('taee', data, neurons, epochs)
+    exp = experiment.Experiment('bova', data, neurons, epochs)
     exp.run_experiment()
     
 
