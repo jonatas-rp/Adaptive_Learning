@@ -7,7 +7,7 @@ def main():
     data = data_processor.get_data('Database/bova_db.csv')
 
     exp = experiment.Experiment('bova', data, neurons, epochs)
-    exp.run_experiment()
+    exp.run_lstm_experiment()
     
 
 if __name__ == '__main__':
