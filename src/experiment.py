@@ -28,7 +28,8 @@ class Experiment:
 
     def create_lstm_model(self, neurons, window_size):
         model = Sequential()
-        model.add(LSTM(neurons, batch_input_shape=(1, 1, window_size), activation='relu'))
+        model.add(LSTM(neurons, batch_input_shape=(1, 1, window_size), activation='relu', return_sequences=True))
+        model.add(LSTM(64, activation='relu'))
         model.add(Dense(1, activation='linear'))
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(0.001))
         return model
@@ -46,7 +47,7 @@ class Experiment:
     def run_mlp_experiment(self):
 
         for n in self.neurons:
-            for window_size in range(4, 366):
+            for window_size in range(1, 366):
                 # Initializing
                 i = 0
                 dataset = self.data[:window_size]
@@ -106,7 +107,8 @@ class Experiment:
     def run_lstm_experiment(self):
 
         for n in self.neurons:
-            for window_size in range(1, 366):
+            window_size = 363
+            while window_size < 366:
                 # Initializing
                 i = 0
                 dataset = self.data[:window_size]
@@ -165,3 +167,8 @@ class Experiment:
                     os.mkdir(fpath)
 
                 data_processor.save_csv(compare, history_loss, window_size, fpath)
+
+                if window_size >= 90:
+                    window_size += 3
+                else:
+                    window_size += 1

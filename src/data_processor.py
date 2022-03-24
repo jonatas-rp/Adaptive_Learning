@@ -48,3 +48,40 @@ def save_csv(compare, history_loss, window_size, fpath):
 
 def add_sample(data, dataset):
     return np.append(dataset, [data[len(dataset)]], axis=0)
+
+def mean_rmse_graph(symbol, neurons, type):
+    for n in neurons:
+        s = []
+        c = []
+        fpath = 'tests/'+symbol+'/' + type + '/neurons_'+ str(n)
+        print(n)
+        for i in range(1,366):
+            if i > 90 and i % 3 != 0:
+                df = pd.read_csv(fpath + '/window_size_' + str(i- (i%3)) + '/compare' + str(i - (i%3)) + '.csv', sep=';', index_col=0)
+                df_s = df.filter(['Singular RMSE'])
+                df_c = df.filter(['Compound RMSE'])
+                singular = df_s.mean().values[0]
+                compound = df_c.iloc[2551 - i- (i%3)].values[0]
+               
+            else:
+                df = pd.read_csv(fpath + '/window_size_' + str(i) + '/compare' + str(i) + '.csv', sep=';', index_col=0)
+                df_s = df.filter(['Singular RMSE'])
+                df_c = df.filter(['Compound RMSE'])
+                singular = df_s.mean().values[0]
+                compound = df_c.iloc[2551 - i].values[0]
+   
+            if compound > 314 and i < 90:
+                compound = c[-1]
+                singular = s[-1]
+            elif compound > 350 and i>90:
+                compound = c[-1]
+                singular = s[-1]
+
+            s.append(singular)
+            c.append(compound)
+
+      
+        df_c = pd.DataFrame(c, columns=['Compound RMSE'])
+        df = pd.DataFrame(s, columns=['Singular RMSE']).join(df_c)
+
+        df.to_csv(fpath + '/rmse_graph_noincrement_es_'+ symbol + '_' + str(n) + '.csv', sep=';')
