@@ -124,4 +124,6 @@ dmypy.json
 
 venv
 tests/
-.vscode
+.vscode/
+.idea/
+vscode
