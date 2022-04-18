@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from typing import Callable
 
 def average(lst):
     return sum(lst) / len(lst)
@@ -84,3 +85,78 @@ def get_min(symbol, neurons, type, start=1, end=364, ylim=[None, None], ylabel="
 
     print(minrmse)
     return globalmin,
+
+def sma(arr, window_size):
+    i = 0
+
+    moving_averages = []
+
+    while i < len(arr) - window_size + 1:
+
+        window = arr[i: i + window_size]
+
+        window_average = np.round(sum(window) / window_size, 2)
+
+        moving_averages.append(window_average[0])
+
+        i += 1
+    moving_averages = np.array(moving_averages).reshape(len(moving_averages), 1)
+    return moving_averages
+
+def calc_rsi(over, fn_roll: Callable, length=21) -> pd.Series:
+
+    over = pd.Series(over)
+
+    delta = over.diff()
+
+    delta = delta[1:]
+
+    up, down = delta.clip(lower=0), delta.clip(upper=0).abs()
+
+    roll_up, roll_down = fn_roll(up), fn_roll(down)
+    rs = roll_up / roll_down
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+
+    rsi[:] = np.select([roll_down == 0, roll_up == 0, True], [100, 0, rsi])
+    rsi.name = 'rsi'
+
+    valid_rsi = rsi[length - 1:]
+    assert ((0 <= valid_rsi) & (valid_rsi <= 100)).all()
+
+
+    return rsi.dropna().reset_index(drop=True)
+
+def rsi_tradingview(ohlc: pd.DataFrame, period: int = 14, round_rsi: bool = True):
+    """ Implements the RSI indicator as defined by TradingView on March 15, 2021.
+        The TradingView code is as follows:
+        //@version=4
+        study(title="Relative Strength Index", shorttitle="RSI", format=format.price, precision=2, resolution="")
+        len = input(14, minval=1, title="Length")
+        src = input(close, "Source", type = input.source)
+        up = rma(max(change(src), 0), len)
+        down = rma(-min(change(src), 0), len)
+        rsi = down == 0 ? 100 : up == 0 ? 0 : 100 - (100 / (1 + up / down))
+        plot(rsi, "RSI", color=#8E1599)
+        band1 = hline(70, "Upper Band", color=#C0C0C0)
+        band0 = hline(30, "Lower Band", color=#C0C0C0)
+        fill(band1, band0, color=#9915FF, transp=90, title="Background")
+    :param ohlc:
+    :param period:
+    :param round_rsi:
+    :return: an array with the RSI indicator values
+    """
+
+    delta = ohlc["Close"].diff()
+
+    up = delta.copy()
+    up[up < 0] = 0
+    up = pd.Series.ewm(up, alpha=1/period).mean()
+
+    down = delta.copy()
+    down[down > 0] = 0
+    down *= -1
+    down = pd.Series.ewm(down, alpha=1/period).mean()
+
+    rsi = np.where(up == 0, 0, np.where(down == 0, 100, 100 - (100 / (1 + up / down))))
+
+    return np.round(rsi, 2) if round_rsi else rsi

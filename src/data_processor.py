@@ -125,3 +125,15 @@ def merge_blocks(blocks, ini, fim):
     for i in range(ini+2, fim):
         merged = np.append(merged, blocks[i], axis=0)
     return merged
+
+def pre_processor(data, blocks, k, window_size):
+    dataTest = merge_blocks(blocks, len(blocks) - k, len(blocks))
+    completeDataTest = data[len(data) - (len(dataTest)):-1].reset_index(drop=True)
+    completeDataTest['Date'] = completeDataTest['Date'].dt.date
+    if window_size > 1:
+        dataTest = np.append(blocks[len(blocks) - k - 1][-(window_size - 1):], dataTest, axis=0)
+
+    index = len(data) - len(dataTest)
+    dataset = dataTest[:window_size]
+
+    return dataTest, completeDataTest, dataset

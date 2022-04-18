@@ -181,7 +181,7 @@ class Experiment:
                     math.sqrt(mean_squared_error(Y_test, predictions_test)))
 
                 # Retrain
-                #model.fit(X_test, dataBlock[j+1:j+2], epochs=self.epochs,verbose=0, callbacks=[EarlyStopping(monitor='loss', patience=10, verbose=0)])
+                model.fit(X_test, dataBlock[j+1:j+2], epochs=self.epochs,verbose=0, callbacks=[EarlyStopping(monitor='loss', patience=10, verbose=0)])
 
             data_test = data_test.append(pd.DataFrame(dataBlock[:-1], columns=['Data'])).reset_index(drop=True)
 
@@ -190,6 +190,6 @@ class Experiment:
             if not os.path.exists(fpath):
                 os.mkdir(fpath)
 
-        data_processor.save_csv(compare_test, history_loss, window_size, fpath, fname='noadpat')
+        data_processor.save_csv(compare_test, history_loss, window_size, fpath, fname='scaffold')
         # Save NN model
-        #model.save(fpath + self.symbol + '_checkpoint.h5')
+        model.save(fpath + self.symbol + '_checkpoint.h5')
